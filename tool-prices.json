@@ -1,0 +1,13 @@
+{
+  "connect_cloudhealth": 0,
+  "disconnect_cloudhealth": 0,
+  "get_account": 8,
+  "get_perspective": 8,
+  "get_spend_overview_report": 40,
+  "list_accounts": 8,
+  "list_assets": 8,
+  "list_connections": 0,
+  "list_perspectives": 8,
+  "list_policies": 8,
+  "run_olap_report": 8
+}
