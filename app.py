@@ -36,3 +36,17 @@ ext = Extension(
 )
 
 chat = ChatExtension(ext)
+
+
+@ext.health_check
+async def health_check(ctx) -> dict:
+    """Report whether a CloudHealth API-key connection is configured."""
+    raw = await ctx.secrets.get("cloudhealth_connections")
+    return {
+        "healthy": bool(raw),
+        "detail": (
+            "CloudHealth connection configured."
+            if raw
+            else "Not connected yet — run connect_cloudhealth."
+        ),
+    }
