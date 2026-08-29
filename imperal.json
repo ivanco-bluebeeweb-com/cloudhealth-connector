@@ -1,0 +1,618 @@
+{
+  "manifest_schema_version": 3,
+  "sdk_version": "5.13.0",
+  "app_id": "cloudhealth-connector",
+  "version": "0.1.0",
+  "name": "CloudHealth",
+  "description": "Connect your own CloudHealth (Broadcom/VMware) account (bring your own API Key from your account settings) to read cloud provider accounts, assets, perspectives (cost-allocation views), OLAP billing/usage reports, and governance policies, plus a value-add spend overview report. Read-only in this release -- registering new cloud accounts and creating policies remain in the CloudHealth console for now.",
+  "icon": "icon.svg",
+  "actions_explicit": true,
+  "system": false,
+  "capabilities": [
+    "cloudhealth:read"
+  ],
+  "tools": [
+    {
+      "name": "connect_cloudhealth",
+      "description": "Connect your own CloudHealth (Broadcom/VMware) account by saving your API Key (from My Profile > Get API Key), after checking it actually works.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "create:connection"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "api_key": {
+            "default": "",
+            "description": "Your CloudHealth API Key (from My Profile > Get API Key).",
+            "title": "Api Key",
+            "type": "string"
+          },
+          "label": {
+            "default": "",
+            "description": "Optional friendly label for this connection, e.g. 'Acme Inc CloudHealth'.",
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "title": "ConnectCloudHealthParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "default": "",
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "title": "ProviderConnection",
+        "type": "object"
+      },
+      "event": "cloudhealth-connected",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "tool_cloudhealth-connector_chat"
+    },
+    {
+      "name": "list_connections",
+      "description": "List the connected CloudHealth accounts.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "description": "Explicit empty params model -- V17 disallows untyped handlers.",
+        "properties": {},
+        "title": "NoParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "ProviderConnection": {
+            "properties": {
+              "id": {
+                "default": "",
+                "title": "Id",
+                "type": "string"
+              },
+              "label": {
+                "default": "",
+                "title": "Label",
+                "type": "string"
+              }
+            },
+            "title": "ProviderConnection",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "connections": {
+            "items": {
+              "$ref": "#/$defs/ProviderConnection"
+            },
+            "title": "Connections",
+            "type": "array"
+          }
+        },
+        "title": "ProviderConnectionList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "tool_cloudhealth-connector_chat"
+    },
+    {
+      "name": "disconnect_cloudhealth",
+      "description": "Disconnect a CloudHealth account: deletes the saved API Key. Nothing in CloudHealth itself is changed.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "delete:connection"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "description": "Which connection to disconnect (see list_connections).",
+            "title": "Connection Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "connection_id"
+        ],
+        "title": "DisconnectCloudHealthParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "deleted": {
+            "default": false,
+            "title": "Deleted",
+            "type": "boolean"
+          },
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "title": "DeleteResult",
+        "type": "object"
+      },
+      "event": "cloudhealth-disconnected",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "tool_cloudhealth-connector_chat"
+    },
+    {
+      "name": "list_accounts",
+      "description": "List cloud provider accounts (AWS/Azure/GCP) registered in the connected CloudHealth account.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which connected CloudHealth account to use (see list_connections). Omit if only one is connected.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "limit": {
+            "default": 50,
+            "description": "Maximum accounts to return.",
+            "maximum": 200,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "title": "ListAccountsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "count": {
+            "default": 0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "accounts": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Accounts",
+            "type": "array"
+          }
+        },
+        "title": "AccountList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "tool_cloudhealth-connector_chat"
+    },
+    {
+      "name": "get_account",
+      "description": "Read one cloud provider account in full by its CloudHealth account id.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which connected CloudHealth account to use (see list_connections). Omit if only one is connected.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "account_id": {
+            "description": "The CloudHealth account id.",
+            "title": "Account Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "title": "GetAccountParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "account": {
+            "additionalProperties": true,
+            "title": "Account",
+            "type": "object"
+          }
+        },
+        "title": "AccountDetail",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "tool_cloudhealth-connector_chat"
+    },
+    {
+      "name": "list_assets",
+      "description": "List assets of a given type (e.g. AwsInstance, AwsS3Bucket, AzureVirtualMachine) tracked in CloudHealth.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which connected CloudHealth account to use (see list_connections). Omit if only one is connected.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "asset_type": {
+            "description": "Asset type, e.g. 'AwsInstance', 'AwsS3Bucket', 'AzureVirtualMachine'.",
+            "title": "Asset Type",
+            "type": "string"
+          },
+          "limit": {
+            "default": 50,
+            "description": "Maximum assets to return.",
+            "maximum": 200,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "asset_type"
+        ],
+        "title": "ListAssetsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "asset_type": {
+            "default": "",
+            "title": "Asset Type",
+            "type": "string"
+          },
+          "count": {
+            "default": 0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "assets": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Assets",
+            "type": "array"
+          }
+        },
+        "title": "AssetList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "tool_cloudhealth-connector_chat"
+    },
+    {
+      "name": "list_perspectives",
+      "description": "List perspectives (CloudHealth's custom cost-allocation views) configured on the connected account.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which connected CloudHealth account to use (see list_connections). Omit if only one is connected.",
+            "title": "Connection Id",
+            "type": "string"
+          }
+        },
+        "title": "ListPerspectivesParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "count": {
+            "default": 0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "perspectives": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Perspectives",
+            "type": "array"
+          }
+        },
+        "title": "PerspectiveList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "tool_cloudhealth-connector_chat"
+    },
+    {
+      "name": "get_perspective",
+      "description": "Read one perspective's schema in full by its CloudHealth perspective id.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which connected CloudHealth account to use (see list_connections). Omit if only one is connected.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "perspective_id": {
+            "description": "The CloudHealth perspective id.",
+            "title": "Perspective Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "perspective_id"
+        ],
+        "title": "GetPerspectiveParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "perspective": {
+            "additionalProperties": true,
+            "title": "Perspective",
+            "type": "object"
+          }
+        },
+        "title": "PerspectiveDetail",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "tool_cloudhealth-connector_chat"
+    },
+    {
+      "name": "list_policies",
+      "description": "List governance policies configured on the connected CloudHealth account.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which connected CloudHealth account to use (see list_connections). Omit if only one is connected.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "limit": {
+            "default": 50,
+            "description": "Maximum policies to return.",
+            "maximum": 200,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "title": "ListPoliciesParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "count": {
+            "default": 0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "policies": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Policies",
+            "type": "array"
+          }
+        },
+        "title": "PolicyList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "tool_cloudhealth-connector_chat"
+    },
+    {
+      "name": "run_olap_report",
+      "description": "Run a CloudHealth OLAP billing/usage report (e.g. AwsBillingInvoice, AwsMonthlyBillingUsage) with chosen dimensions, measures, and a time interval.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which connected CloudHealth account to use (see list_connections). Omit if only one is connected.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "report_type": {
+            "description": "OLAP report name, e.g. 'AwsBillingInvoice', 'AwsMonthlyBillingUsage'.",
+            "title": "Report Type",
+            "type": "string"
+          },
+          "dimensions": {
+            "default": "",
+            "description": "Optional comma-separated dimension names, e.g. 'Account,Service'.",
+            "title": "Dimensions",
+            "type": "string"
+          },
+          "measures": {
+            "default": "cost",
+            "description": "Optional comma-separated measure names, e.g. 'cost,usage'.",
+            "title": "Measures",
+            "type": "string"
+          },
+          "interval": {
+            "default": "last_month",
+            "description": "Time interval, e.g. 'last_month', 'last_7_days'.",
+            "title": "Interval",
+            "type": "string"
+          }
+        },
+        "required": [
+          "report_type"
+        ],
+        "title": "RunOlapReportParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "report_type": {
+            "default": "",
+            "title": "Report Type",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "title": "OlapReportResult",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "tool_cloudhealth-connector_chat"
+    },
+    {
+      "name": "get_spend_overview_report",
+      "description": "Value-add report: summarize recent CloudHealth billing usage by cloud service for a chosen time interval.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which connected CloudHealth account to use (see list_connections). Omit if only one is connected.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "interval": {
+            "default": "last_month",
+            "description": "Time interval, e.g. 'last_month', 'last_7_days'.",
+            "title": "Interval",
+            "type": "string"
+          }
+        },
+        "title": "GetSpendOverviewParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "interval": {
+            "default": "",
+            "title": "Interval",
+            "type": "string"
+          },
+          "total_spend": {
+            "default": 0.0,
+            "title": "Total Spend",
+            "type": "number"
+          },
+          "by_service": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "By Service",
+            "type": "object"
+          }
+        },
+        "title": "SpendOverviewReport",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "tool_cloudhealth-connector_chat"
+    }
+  ],
+  "signals": [],
+  "schedules": [],
+  "required_scopes": [],
+  "icon_size_bytes": 677,
+  "panels": [
+    {
+      "panel_id": "cloudhealth_connect",
+      "slot": "left",
+      "title": "CloudHealth",
+      "tree": {},
+      "icon": "",
+      "refresh": "manual",
+      "center_overlay": false
+    },
+    {
+      "panel_id": "cloudhealth_connect_help",
+      "slot": "overlay",
+      "title": "How do I set this up?",
+      "tree": {},
+      "icon": "",
+      "refresh": "manual",
+      "center_overlay": false
+    },
+    {
+      "panel_id": "cloudhealth_settings",
+      "slot": "center",
+      "title": "",
+      "tree": {},
+      "icon": "",
+      "refresh": "manual",
+      "center_overlay": false
+    }
+  ]
+}
