@@ -35,7 +35,7 @@ async def list_accounts(ctx, params: ListAccountsParams) -> ActionResult:
     data = await ch.request(ctx, conn, "GET", "/v1/aws_accounts", params={"per_page": params.limit}, action="list accounts")
     rows = data.get("aws_accounts", data) if isinstance(data, dict) else data
     rows = rows if isinstance(rows, list) else []
-    return ActionResult.ok(AccountList(count=len(rows), accounts=rows))
+    return ActionResult.success(AccountList(count=len(rows), accounts=rows), summary="Accounts listed.")
 
 
 @chat.function(
@@ -49,7 +49,7 @@ async def get_account(ctx, params: GetAccountParams) -> ActionResult:
     if not conn:
         return err
     data = await ch.request(ctx, conn, "GET", f"/v1/aws_accounts/{params.account_id}", action="get account")
-    return ActionResult.ok(AccountDetail(account=data if isinstance(data, dict) else {}))
+    return ActionResult.success(AccountDetail(account=data if isinstance(data, dict) else {}), summary="Account retrieved.")
 
 
 @chat.function(
@@ -64,7 +64,7 @@ async def list_assets(ctx, params: ListAssetsParams) -> ActionResult:
         return err
     data = await ch.request(ctx, conn, "GET", f"/v1/{params.asset_type}", params={"per_page": params.limit}, action=f"list {params.asset_type} assets")
     rows = data if isinstance(data, list) else data.get(params.asset_type, []) if isinstance(data, dict) else []
-    return ActionResult.ok(AssetList(asset_type=params.asset_type, count=len(rows), assets=rows))
+    return ActionResult.success(AssetList(asset_type=params.asset_type, count=len(rows), assets=rows), summary="Assets listed.")
 
 
 @chat.function(
@@ -79,7 +79,7 @@ async def list_perspectives(ctx, params: ListPerspectivesParams) -> ActionResult
         return err
     data = await ch.request(ctx, conn, "GET", "/v1/perspective_schemas", action="list perspectives")
     rows = data if isinstance(data, list) else list(data.values()) if isinstance(data, dict) else []
-    return ActionResult.ok(PerspectiveList(count=len(rows), perspectives=rows))
+    return ActionResult.success(PerspectiveList(count=len(rows), perspectives=rows), summary="Perspectives listed.")
 
 
 @chat.function(
@@ -93,7 +93,7 @@ async def get_perspective(ctx, params: GetPerspectiveParams) -> ActionResult:
     if not conn:
         return err
     data = await ch.request(ctx, conn, "GET", f"/v1/perspective_schemas/{params.perspective_id}", action="get perspective")
-    return ActionResult.ok(PerspectiveDetail(perspective=data if isinstance(data, dict) else {}))
+    return ActionResult.success(PerspectiveDetail(perspective=data if isinstance(data, dict) else {}), summary="Perspective retrieved.")
 
 
 @chat.function(
@@ -108,7 +108,7 @@ async def list_policies(ctx, params: ListPoliciesParams) -> ActionResult:
         return err
     data = await ch.request(ctx, conn, "GET", "/v1/policies", params={"per_page": params.limit}, action="list policies")
     rows = data if isinstance(data, list) else data.get("policies", []) if isinstance(data, dict) else []
-    return ActionResult.ok(PolicyList(count=len(rows), policies=rows))
+    return ActionResult.success(PolicyList(count=len(rows), policies=rows), summary="Policies listed.")
 
 
 @chat.function(
@@ -128,4 +128,4 @@ async def run_olap_report(ctx, params: RunOlapReportParams) -> ActionResult:
     data = await ch.request(ctx, conn, "GET", f"/olap_reports/{params.report_type}", params=query, action=f"run {params.report_type} report")
     rows = data.get("data", data) if isinstance(data, dict) else data
     rows = rows if isinstance(rows, list) else []
-    return ActionResult.ok(OlapReportResult(report_type=params.report_type, rows=rows))
+    return ActionResult.success(OlapReportResult(report_type=params.report_type, rows=rows), summary="Olap report run requested.")

@@ -78,7 +78,7 @@ async def connect_cloudhealth(ctx, params: ConnectCloudHealthParams) -> ActionRe
     entry = {"id": conn_id, "label": params.label or "CloudHealth account", "api_key": params.api_key}
     connections.append(entry)
     await _save_connections(ctx, connections)
-    return ActionResult.ok(ProviderConnection(id=conn_id, label=entry["label"]))
+    return ActionResult.success(ProviderConnection(id=conn_id, label=entry["label"]), summary="Cloudhealth connected.")
 
 
 @chat.function(
@@ -89,9 +89,9 @@ async def connect_cloudhealth(ctx, params: ConnectCloudHealthParams) -> ActionRe
 async def list_connections(ctx, params: NoParams) -> ActionResult:
     """List connected CloudHealth accounts."""
     connections = await _load_connections(ctx)
-    return ActionResult.ok(ProviderConnectionList(
+    return ActionResult.success(ProviderConnectionList(
         connections=[ProviderConnection(id=c.get("id", ""), label=c.get("label", "")) for c in connections]
-    ))
+    ), summary="Connections listed.")
 
 
 @chat.function(
@@ -107,4 +107,4 @@ async def disconnect_cloudhealth(ctx, params: DisconnectCloudHealthParams) -> Ac
     if len(remaining) == len(connections):
         return ActionResult.error("No connection found with that id.", code="CLOUDHEALTH_NOT_FOUND")
     await _save_connections(ctx, remaining)
-    return ActionResult.ok(DeleteResult(deleted=True, id=params.connection_id))
+    return ActionResult.success(DeleteResult(deleted=True, id=params.connection_id), summary="Cloudhealth disconnected.")
