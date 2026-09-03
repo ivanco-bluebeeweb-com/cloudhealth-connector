@@ -14,7 +14,7 @@ specific. The "How do I set this up?" instructions live ONLY in the help
 overlay below -- never duplicated as static sidebar text.
 
 KNOWN UI COMPONENT PITFALLS (learned building Ramp/Brex/Vantage/CloudZero
-Connectors, 2026-08-29): ui.Stack does NOT accept full_width=True (only
+Connectors, 2026-08-29): ui.Stack does NOT accept (only
 ui.Button does). ui.Input does NOT accept secret=True -- use
 ui.Password(param_name=..., placeholder=...) instead. ui.Form does NOT
 accept on_submit= -- use action="tool_name" (a plain string) instead.
@@ -29,8 +29,7 @@ import handlers_connection as h
 
 def _settings_button() -> ui.UINode:
     return ui.Button(
-        "App settings", variant="secondary", size="sm", full_width=True,
-        icon="settings", on_click=ui.Call("__panel__cloudhealth_settings"),
+        "App settings", variant="secondary", size="sm", icon="settings", on_click=ui.Call("__panel__cloudhealth_settings"),
     )
 
 
@@ -71,8 +70,7 @@ def _connect_section() -> ui.UINode:
             ],
         ),
         ui.Button(
-            "How do I set this up?", variant="ghost", size="sm", full_width=True,
-            on_click=ui.Call("__panel__cloudhealth_connect_help"),
+            "How do I set this up?", variant="ghost", size="sm", on_click=ui.Call("__panel__cloudhealth_connect_help"),
         ),
     ])
 
